@@ -1,0 +1,44 @@
+QBCore = nil
+TriggerEvent('QBCore:GetObject', function(obj) QBCore = obj end)
+
+ESX = nil
+TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+
+local bodyguards = {}
+
+-- Function to spawn a bodyguard NPC
+function SpawnBodyguard()
+    local model = "s_m_y_swat_01" -- SWAT model, change as needed
+    local pedModel = GetHashKey(model)
+
+    RequestModel(pedModel)
+    while not HasModelLoaded(pedModel) do
+        Citizen.Wait(10)
+    end
+
+    local ped = CreatePed(4, pedModel, x, y, z, heading, true, true)
+    SetPedCombatAttributes(ped, 46, true)
+    SetPedCombatAttributes(ped, 5, true)
+    SetPedCombatAttributes(ped, 17, true)
+    SetPedCombatAbility(ped, 100)
+    SetPedCombatRange(ped, 2)
+    SetPedCombatMovement(ped, 2)
+    TaskCombatPed(ped, GetPlayerPed(-1), 0, 16)
+
+    table.insert(bodyguards, ped)
+end
+
+-- Command to spawn a bodyguard
+RegisterCommand('spawnbodyguard', function(source, args, rawCommand)
+    local x, y, z = table.unpack(GetEntityCoords(GetPlayerPed(-1), true))
+    local heading = GetEntityHeading(GetPlayerPed(-1))
+    SpawnBodyguard(x, y, z, heading)
+end, false)
+
+-- Command to dismiss all bodyguards
+RegisterCommand('dismissbodyguards', function(source, args, rawCommand)
+    for _, ped in ipairs(bodyguards) do
+        DeleteEntity(ped)
+    end
+    bodyguards = {}
+end, false)
